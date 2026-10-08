@@ -1,10 +1,10 @@
 import swaggerJSDoc from "swagger-jsdoc";
-import dotenv, { config } from "dotenv";
+import dotenv from "dotenv";
 dotenv.config();
 
 const options = {
   definition: {
-    openapi: "3.2.0",
+    openapi: "3.0.0",
     info: {
       title: "Task Manager API",
       version: "1.0.0",
@@ -13,7 +13,7 @@ const options = {
     servers: [
       {
         url:
-          process.env.NODE_ENV == "development"
+          process.env.NODE_ENV === "development"
             ? "http://localhost:3000"
             : "https://myapp-p6oc.onrender.com",
       },
@@ -33,7 +33,7 @@ const options = {
       },
     ],
   },
-  apis: ["./router/*.js"], // Where your route files live
+  apis: ["./router/*.js"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
