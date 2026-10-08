@@ -21,11 +21,10 @@ import { swaggerSpec } from "./utilities/swagger.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security & Basic Middlewares
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "*",
   }),
 );
 app.use(express.json());
@@ -35,7 +34,6 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// Rate Limiter middleware
 app.use(limiter);
 
 let users = [
@@ -44,12 +42,10 @@ let users = [
   { id: 3, name: "Zubeyr" },
 ];
 
-// Base Route
 app.get("/", (req, res) => {
   res.json(users);
 });
 
-// API Routes
 app.use("/users", usersroute);
 app.use("/auth", authrouter);
 app.use("/admin", adminroutes);
@@ -57,22 +53,18 @@ app.use("/upload", uploadRouter);
 app.use("/tasks", taskRouter);
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Error Handling Middlewares (Must be at the bottom)
 app.use(notfound);
 app.use(errorHandler);
 
-// Database Connection & Server Start
 const startServer = async () => {
-  // Hubi Environment Variable-ka MongoDB
+  // Wuxuu isticmaalayaa MONGO_URI, MONGO_URI_PRO, ama MONGO_URI_DEV kii jira
   const mongoUri =
-    process.env.NODE_ENV === "production"
-      ? process.env.MONGO_URI_DEV
-      : process.env.MONGO_URI_PRO;
+    process.env.MONGO_URI ||
+    process.env.MONGO_URI_PRO ||
+    process.env.MONGO_URI_DEV;
 
   if (!mongoUri) {
-    throw new Error(
-      "MongoDB Connection URI is not configured in Environment Variables.",
-    );
+    throw new Error("MONGO_URI is not configured in Environment Variables.");
   }
 
   await mongoose.connect(mongoUri);
