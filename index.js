@@ -1,32 +1,42 @@
 import express from "express";
-const app = express();
-import usersroute from "./router/users.js";
 import "dotenv/config";
 import cors from "cors";
 import morgan from "morgan";
 import mongoose from "mongoose";
+import helmet from "helmet";
+import swaggerUi from "swagger-ui-express";
+
+import usersroute from "./router/users.js";
 import uploadRouter from "./router/upload.js";
 import taskRouter from "./router/task.js";
-import logger from "./middleware/logger.js";
-import helmet from "helmet";
 import authrouter from "./router/auth.js";
 import adminroutes from "./router/admin.js";
+
+import logger from "./middleware/logger.js";
 import notfound from "./middleware/notfound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./utilities/swagger.js";
 import { limiter } from "./middleware/rateLimiter.js";
+import { swaggerSpec } from "./utilities/swagger.js";
 
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(logger);
+// Security & Basic Middlewares
+app.use(helmet());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
   }),
 );
-app.use(morgan("dev"));
+app.use(express.json());
+app.use(logger);
+
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
+
+// Rate Limiter middleware
+app.use(limiter);
 
 let users = [
   { id: 1, name: "Ayaan" },
@@ -34,86 +44,42 @@ let users = [
   { id: 3, name: "Zubeyr" },
 ];
 
-//router middleware
+// Base Route
+app.get("/", (req, res) => {
+  res.json(users);
+});
+
+// API Routes
 app.use("/users", usersroute);
 app.use("/auth", authrouter);
 app.use("/admin", adminroutes);
 app.use("/upload", uploadRouter);
 app.use("/tasks", taskRouter);
-app.use(helmet());
-app.get("/", (req, res) => {
-  res.json(users);
-});
-
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-}
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// console.log(process.env.PORT);
-// 0;
-
-// // GET route
-// app.get(`/`, (req, res) => {
-//   res.json(users);
-// });
-
-// // POST route
-// app.post(`/users`, (req, res) => {
-//   const userdata = req.body;
-
-//   const newUser = {
-//     id: users.length + 1,
-//     name: userdata.name,
-//   };
-//   users.push(newUser);
-//   res.status(201).json(newUser);
-// });
-
-// //find user by id route
-// app.get("/users/:id", (req, res) => {
-//   const user = users.find((u) => u.id == req.params.id);
-//   if (!user) {
-//     return res.status(404).json({ error: "User not found" });
-//   }
-//   res.json(user);
-// });
-
-// // PUT route
-// app.put("/users/:id", (req, res) => {
-//   const user = users.find((u) => u.id == req.params.id);
-//   if (!user) {
-//     return res.status(404).json({ error: "User not found" });
-//   }
-//   user.name = req.body.name;
-
-//   res.json(user);
-// });
-
-// //delete route
-// app.delete("/users/:id", (req, res) => {
-//   users = users.filter((u) => u.id != req.params.id);
-
-//   res.send(`User data with id ${req.params.id} deleted successfully`);
-// });
+// Error Handling Middlewares (Must be at the bottom)
 app.use(notfound);
 app.use(errorHandler);
-app.use(limiter);
 
+// Database Connection & Server Start
 const startServer = async () => {
-  if (!process.env.MONGO_URI) {
-    throw new Error("MONGO_URI is not configured");
+  // Hubi Environment Variable-ka MongoDB
+  const mongoUri =
+    process.env.NODE_ENV === "production"
+      ? process.env.MONGO_URI_PRO || process.env.MONGO_URI
+      : process.env.MONGO_URI_DEV || process.env.MONGO_URI;
+
+  if (!mongoUri) {
+    throw new Error(
+      "MongoDB Connection URI is not configured in Environment Variables.",
+    );
   }
 
-  await mongoose.connect(
-    process.env.NODE_ENV == "development"
-      ? process.env.MONGO_URI_DEV
-      : process.env.MONGO_URI_PRO,
-  );
-  console.log("database connected");
+  await mongoose.connect(mongoUri);
+  console.log("Database connected successfully");
 
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
   });
 };
 
