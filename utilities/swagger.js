@@ -1,4 +1,6 @@
 import swaggerJSDoc from "swagger-jsdoc";
+import dotenv, { config } from "dotenv";
+dotenv.config();
 
 const options = {
   definition: {
@@ -10,7 +12,10 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:3000",
+        url:
+          process.env.NODE_ENV == "development"
+            ? "http://localhost:3000"
+            : "https://myapp-p6oc.onrender.com",
       },
     ],
     components: {
