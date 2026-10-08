@@ -66,8 +66,8 @@ const startServer = async () => {
   // Hubi Environment Variable-ka MongoDB
   const mongoUri =
     process.env.NODE_ENV === "production"
-      ? process.env.MONGO_URI_PRO || process.env.MONGO_URI
-      : process.env.MONGO_URI_DEV || process.env.MONGO_URI;
+      ? process.env.MONGO_URI_DEV
+      : process.env.MONGO_URI_PRO;
 
   if (!mongoUri) {
     throw new Error(
