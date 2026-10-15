@@ -21,12 +21,19 @@ import { swaggerSpec } from "./utilities/swagger.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
+
 app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "*",
-  }),
-);
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL || "*",
+//   }),
+// );
 app.use(express.json());
 app.use(logger);
 
@@ -36,28 +43,25 @@ if (process.env.NODE_ENV === "development") {
 
 app.use(limiter);
 
-let users = [
-  { id: 1, name: "Ayaan" },
-  { id: 2, name: "Fatima" },
-  { id: 3, name: "Zubeyr" },
-];
-
-app.get("/", (req, res) => {
-  res.json(users);
+app.get("/api/health", (req, res) => {
+  res.json("server is working ...👌");
 });
 
-app.use("/users", usersroute);
-app.use("/auth", authrouter);
-app.use("/admin", adminroutes);
-app.use("/upload", uploadRouter);
-app.use("/tasks", taskRouter);
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api/users", usersroute);
+app.use("/api/auth", authrouter);
+app.use("/api/admin", adminroutes);
+app.use("/api/upload", uploadRouter);
+app.use("/api/tasks", taskRouter);
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(notfound);
 app.use(errorHandler);
 
 const startServer = async () => {
-  // Wuxuu isticmaalayaa MONGO_URI, MONGO_URI_PRO, ama MONGO_URI_DEV kii jira
+  if (!process.env.jwtSecret && !process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured in Environment Variables.");
+  }
+
   const mongoUri =
     process.env.MONGO_URI ||
     process.env.MONGO_URI_PRO ||

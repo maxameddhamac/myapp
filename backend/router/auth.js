@@ -88,6 +88,13 @@ authrouter.post("/login", login);
  *         description: Current user info
  */
 authrouter.get("/profile", protect, (req, res) => {
-  res.json({ message: "This is a protected route" });
+  res.json({
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role,
+    },
+  });
 });
 export default authrouter;

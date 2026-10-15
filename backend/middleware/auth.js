@@ -8,7 +8,10 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: "Authentication required" });
   }
 
-  const secret = process.env.jwtSecret || process.env.JWT_SECRET || "change-me";
+  const secret = process.env.jwtSecret || process.env.JWT_SECRET;
+  if (!secret) {
+    return res.status(500).json({ message: "Authentication is not configured" });
+  }
   let decoded;
   try {
     decoded = jwt.verify(token, secret);

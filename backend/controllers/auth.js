@@ -22,7 +22,10 @@ export const registerUser = async (req, res, next) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const userExists = await User.findOne({ email: normalizedEmail });
+    const userExists = await User.findOne({ email: normalizedEmail }).collation({
+      locale: "en",
+      strength: 2,
+    });
     if (userExists) {
       return res.status(409).json({
         message:
@@ -76,7 +79,10 @@ export const login = async (req, res, next) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }).collation({
+      locale: "en",
+      strength: 2,
+    });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

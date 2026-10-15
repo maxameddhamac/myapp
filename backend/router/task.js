@@ -1,15 +1,26 @@
 import express from "express";
+import mongoose from "mongoose";
 import {
   createTask,
   getMyTasks,
   updateTask,
   deleteTask,
 } from "../controllers/taskController.js";
-import { protect } from "../middleware/auth.js"; // ✅ 'middleware' ma laha 's'
-import { validate } from "../middleware/validate.js"; // ✅ Faylka saxda ah waa validate.js
-import { taskValidationSchema } from "../schemas/TaskSchema.js";
+import { protect } from "../middleware/auth.js";
+import { validate } from "../middleware/validate.js";
+import {
+  taskValidationSchema,
+  taskUpdateValidationSchema,
+} from "../schemas/TaskSchema.js";
 
 const router = express.Router();
+router.use(protect);
+router.param("id", (req, res, next, id) => {
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid task ID" });
+  }
+  return next();
+});
 /**
  * @swagger
  * /tasks:
@@ -22,8 +33,6 @@ const router = express.Router();
  *       200:
  *         description: A list of tasks
  */
-
-router.use(protect);
 
 router.post("/", validate(taskValidationSchema), createTask);
 /**
@@ -91,7 +100,7 @@ router.get("/", getMyTasks);
  *         description: Task updated
  */
 
-router.put("/:id", validate(taskValidationSchema), updateTask);
+router.put("/:id", validate(taskUpdateValidationSchema), updateTask);
 /**
  * @swagger
  * /tasks/{id}:

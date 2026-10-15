@@ -120,14 +120,7 @@ export const createManagedUser = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   const { id } = req.params;
-  const { role, ...updates } = req.body ?? {};
-
-  if (role !== undefined) {
-    return res.status(403).json({
-      message:
-        "Update a user's role through the admin role-management endpoint",
-    });
-  }
+  const updates = req.body;
 
   try {
     const updatedUser = await User.findByIdAndUpdate(id, updates, {

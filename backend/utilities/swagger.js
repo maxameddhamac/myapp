@@ -12,10 +12,7 @@ const options = {
     },
     servers: [
       {
-        url:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : "https://myapp-p6oc.onrender.com",
+        url: process.env.API_BASE_URL || "http://localhost:3000/api",
       },
     ],
     components: {
@@ -27,13 +24,8 @@ const options = {
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
   },
-  apis: ["./router/*.js"],
+  apis: ["./backend/router/*.js"],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
